@@ -1,0 +1,44 @@
+version: "3.7"
+
+services:
+  go-api:
+    build:
+      context: ./api
+      target: debug
+    env_file: .env
+    restart: always
+    volumes:
+      - ./api/src:/usr/src
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - "seccomp:unconfined"
+    ports:
+      - "5000:5000"
+      - "2345:2345"
+    networks:
+      - main_network
+
+  redis:
+    image: redis:6.2-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    expose:
+      - 6379
+    networks:
+      - main_network
+
+  postgres:
+    image: postgres:14.1-alpine
+    env_file: .env
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - main_network
+
+volumes:
+  pgdata:
+
+networks:
+  main_network:

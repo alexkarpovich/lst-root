@@ -1,0 +1,4 @@
+api
+pgdata
+.env
+.DS_Store

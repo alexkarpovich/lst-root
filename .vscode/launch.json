@@ -9,8 +9,9 @@
             "type": "go",
             "request": "attach",
             "mode": "remote",
-            "remotePath": "",
+            "remotePath": "/usr/src",
             "port": 2345,
+            "cwd": "${workspaceFolder}/api/src",
             "host": "127.0.0.1"
         }
     ]

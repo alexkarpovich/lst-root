@@ -25,20 +25,29 @@ def transfer_sets_expressions(connection):
         details = i['tr.details'].strip()
 
         sets_map[node_name]['x'][evalue]['tr'][tvalue]['tsc'][tsc] = True
-        sets_map[node_name]['x'][evalue]['tr'][tvalue]['comment'] = i['tr.details'].strip()
+        sets_map[node_name]['x'][evalue]['tr'][tvalue]['comment'] = details
         expression_map[evalue]['lang'] = 'zh'
         expression_map[evalue]['tsc'][tsc] = True
         expression_map[tvalue]['lang'] = 'ru'
         transcription_map[tsc]['id'] = None
         # print('{} {} {} ({}, {})'.format(i['x.name'], i['t.value'], i['tt.value'], i['tr.transcription'], i['tr.details']))
 
-    for tvalue, _ in transcription_map.items():
+    for tvalue in list(transcription_map.keys()):
         with connection.cursor() as cursor:
-            cursor.execute("""INSERT INTO transcriptions (type, value) VALUES(%s, %s) RETURNING id""", [1, tvalue])
-            tsc_id = cursor.fetchone()[0] 
+            tsc_id = None
+            cursor.execute("""INSERT INTO transcriptions (type, value) VALUES(%s, %s) ON CONFLICT (type, value) DO NOTHING RETURNING id""", [30, tvalue])
+            res = cursor.fetchone()
+            
+            if res:
+                tsc_id = res[0]
+            else:
+                cursor.execute("SELECT id FROM transcriptions WHERE type=%s AND value=%s", [30, tvalue])
+                tsc_id = cursor.fetchone()[0]
+
             transcription_map[tvalue]['id'] = tsc_id    
     
     for evalue, edata in expression_map.items():
+        print(evalue)
         with connection.cursor() as cursor:
             cursor.execute("""INSERT INTO expressions (value, lang) VALUES(%s, %s) ON CONFLICT (value, lang) DO NOTHING RETURNING id""", [evalue, edata['lang']])
             res = cursor.fetchone()
@@ -52,12 +61,15 @@ def transfer_sets_expressions(connection):
 
             expression_map[evalue]['id'] = e_id
 
-            for tvalue, _ in edata['tsc'].items():
+            if edata['lang'] == 'ru':
+                continue
+            
+            print(list(edata['tsc'].keys()))
+            for tvalue in list(edata['tsc'].keys()):
                 tsc_id = transcription_map[tvalue]['id']
                 cursor.execute("""INSERT INTO expression_transcription (expression_id, transcription_id) VALUES(%s, %s) ON CONFLICT (expression_id, transcription_id) DO NOTHING""", [e_id, tsc_id])
 
     for sname, svalue in sets_map.items():
-        print(sname)
         if "id" not in svalue:
             with connection.cursor() as cursor:
                 cursor.execute("""
@@ -67,7 +79,6 @@ def transfer_sets_expressions(connection):
                 node_id = cursor.fetchone()[0]
 
                 cursor.execute("INSERT INTO group_node (group_id, node_id, path) VALUES(%s, %s, %s)", [1, node_id, ""])
-                print(node_id)
                 sets_map[sname]['id'] = node_id
 
         for evalue, edata in svalue['x'].items():
@@ -81,7 +92,6 @@ def transfer_sets_expressions(connection):
                     e_id = res[0]                   
 
                     cursor.execute("""INSERT INTO node_expression (node_id, expression_id) VALUES(%s, %s) ON CONFLICT (node_id, expression_id) DO NOTHING""", [sets_map[sname]['id'], e_id])          
-                print('{} = {}'.format(evalue, e_id))
                 sets_map[sname]['x'][evalue]['id'] = e_id
                 expression_map[evalue]['id'] = e_id
 
@@ -102,7 +112,8 @@ def transfer_sets_expressions(connection):
                             t_id = cursor.fetchone()[0] 
 
                         cursor.execute("""INSERT INTO node_translation (node_id, translation_id) VALUES(%s, %s) ON CONFLICT (node_id, translation_id) DO NOTHING""", [sets_map[sname]['id'], t_id]) 
-                        for tsc, _ in tdata['tsc'].items():
+                        print('{} {} {} {}'.format(sname, evalue, tvalue, list(tdata['tsc'].keys())))
+                        for tsc in list(tdata['tsc'].keys()):
                             tsc_id = transcription_map[tsc]['id']
                             cursor.execute("""INSERT INTO translation_transcription (translation_id, transcription_id) VALUES(%s, %s) ON CONFLICT (translation_id, transcription_id) DO NOTHING""", [t_id, tsc_id])               
                         

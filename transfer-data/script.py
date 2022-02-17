@@ -135,4 +135,3 @@ finally:
     if connection:
         # connection.rollback()
         connection.close()
-        print("Соединение с PostgreSQL закрыто")

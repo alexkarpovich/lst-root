@@ -23,13 +23,16 @@ def transfer_sets_expressions(connection):
         tvalue = i['tt.value'].strip()
         tsc = i['tr.transcription'].strip()
         details = i['tr.details'].strip()
-
-        sets_map[node_name]['x'][evalue]['tr'][tvalue]['tsc'][tsc] = True
+        
         sets_map[node_name]['x'][evalue]['tr'][tvalue]['comment'] = details
         expression_map[evalue]['lang'] = 'zh'
-        expression_map[evalue]['tsc'][tsc] = True
         expression_map[tvalue]['lang'] = 'ru'
-        transcription_map[tsc]['id'] = None
+
+        if len(tsc) > 0:
+            sets_map[node_name]['x'][evalue]['tr'][tvalue]['tsc'][tsc] = True
+            expression_map[evalue]['tsc'][tsc] = True
+            transcription_map[tsc]['id'] = None
+        
         # print('{} {} {} ({}, {})'.format(i['x.name'], i['t.value'], i['tt.value'], i['tr.transcription'], i['tr.details']))
 
     for tvalue in list(transcription_map.keys()):

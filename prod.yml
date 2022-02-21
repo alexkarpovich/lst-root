@@ -3,6 +3,8 @@ version: "3.7"
 services:
   nginx:
     image: nginx:1.21.6-alpine
+    volumes:
+      - ./ui/build:/srv/web
     networks:
       - main_network
 
@@ -35,8 +37,6 @@ services:
   postgres:
     image: postgres:14.1-alpine
     env_file: .env
-    volumes:
-      - ./pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     networks:

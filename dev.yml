@@ -5,22 +5,24 @@ services:
     build:
       context: .
       dockerfile: ./dockerfiles/nginx/Dockerfile
+      target: prod
       args:
-        node: ${NODE:-prod}
-    image: nginx:1.21.6-alpine
-    volumes:
-      - ./ui/build:/srv/web
+        node: dev
+    env_file: .env
+    image: lst/nginx:latest
+    ports:
+      - "80:80"
+      - "443:443"
     networks:
       - main_network
 
   go-api:
     build:
       context: ./api
-      target: debug
+      target: prod
     env_file: .env
+    image: lst/go-api:latest
     restart: always
-    volumes:
-      - ./api/src:/usr/src
     cap_add:
       - SYS_PTRACE
     security_opt:
@@ -39,6 +41,8 @@ services:
   postgres:
     image: postgres:14.1-alpine
     env_file: .env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     networks:

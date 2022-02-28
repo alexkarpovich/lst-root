@@ -9,19 +9,19 @@ services:
       args:
         node: dev
     env_file: .env
-    image: lst/nginx:latest
+    image: akarpovi4/lst-nginx:1.0
     ports:
       - "80:80"
       - "443:443"
     networks:
       - main_network
 
-  go-api:
+  goapi:
     build:
       context: ./api
       target: prod
     env_file: .env
-    image: lst/go-api:latest
+    image: akarpovi4/lst-goapi:1.0
     restart: always
     cap_add:
       - SYS_PTRACE

@@ -9,7 +9,7 @@ services:
       args:
         node: dev
     env_file: .env
-    image: akarpovi4/lst-nginx:1.0
+    image: akarpovi4/lst-nginx:1.0-dev
     ports:
       - "80:80"
       - "443:443"
@@ -21,7 +21,7 @@ services:
       context: ./api
       target: prod
     env_file: .env
-    image: akarpovi4/lst-goapi:1.0
+    image: akarpovi4/lst-goapi:1.0-dev
     restart: always
     cap_add:
       - SYS_PTRACE
